@@ -9,7 +9,12 @@ public class DefaultApiKey(RequestDelegate next, IConfiguration configuration)
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var defaultApiKey = _configuration["SecretKeys:Default"] ?? null;
+        var defaultApiKey = _configuration["SecretKeys:Default"] ?? _configuration["SecretKeys__Default"];
+
+        if (string.IsNullOrEmpty(defaultApiKey))
+        {
+            Console.WriteLine("❌ Ingen API-nyckel hittad i konfigurationen!");
+        }
 
         if (string.IsNullOrEmpty(defaultApiKey) || !context.Request.Headers.TryGetValue(APIKEY_HEADER_NAME, out var providedApiKey))
         {
@@ -24,6 +29,7 @@ public class DefaultApiKey(RequestDelegate next, IConfiguration configuration)
             await context.Response.WriteAsync("Invalid api-key");
             return;
         }
+
 
         await _next(context);
     }
